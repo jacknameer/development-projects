@@ -1,0 +1,28 @@
+/*
+  CSS Reset: 清除所有元素的默认内外边距，
+  并设置更直观的盒模型计算方式。
+*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  /*
+    确保 html 和 body 占满整个视口高度，
+    这是让内部元素使用 height: 100% 生效的基础。
+  */
+  html,
+  body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden; /* 防止出现不必要的滚动条 */
+  }
+  
+  /*
+    确保 Vue 的根应用容器也继承这个高度。
+  */
+  #app {
+    height: 100%;
+    width: 100%;
+  }
