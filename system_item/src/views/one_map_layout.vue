@@ -2,26 +2,26 @@
   <div class="map_wrapper">
     <!-- 下拉面板 -->
     <div class="floating-filters">
-      <el-select v-model="filter1" placeholder="请选择国家" clearable class="filter-item">
+      <el-select v-model="filter1" placeholder="国家" clearable class="filter-item">
         <el-option label="中国" value="a"></el-option>
         <el-option label="美国" value="b"></el-option>
       </el-select>
 
-      <el-select v-model="filter2" placeholder="请选择省区" clearable class="filter-item">
+      <el-select v-model="filter2" placeholder="省区" clearable class="filter-item">
         <el-option label="湖北省" value="x"></el-option>
         <el-option label="云南省" value="y"></el-option>
       </el-select>
 
-      <el-select v-model="filter3" placeholder="请选择市区" clearable class="filter-item">
+      <!-- <el-select v-model="filter3" placeholder="市区" clearable class="filter-item">
         <el-option label="武汉市" value="1"></el-option>
         <el-option label="昆明市" value="2"></el-option>
-      </el-select>
+      </el-select> -->
 
-      <el-select v-model="filter4" placeholder="请选择功能" clearable class="filter-item">
+      <el-select v-model="filter4" placeholder="功能" clearable class="filter-item">
         <el-option label="变化检测" :value="true"></el-option>
         <el-option label="道路提取" :value="false"></el-option>
       </el-select>
-      <el-select v-model="filter5" placeholder="请选择模型" clearable class="filter-item">
+      <el-select v-model="filter5" placeholder="模型" clearable class="filter-item">
         <el-option label="模型1" :value="true"></el-option>
         <el-option label="模型2" :value="false"></el-option>
       </el-select>

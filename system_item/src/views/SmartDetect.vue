@@ -52,7 +52,7 @@
               </el-form-item>
   
               <!-- 采集时间 -->
-              <el-form-item label="采集时间">
+              <!-- <el-form-item label="采集时间">
                 <el-date-picker
                   v-model="formData.dateRange"
                   type="daterange"
@@ -60,7 +60,7 @@
                   start-placeholder="开始日期"
                   end-placeholder="结束日期"
                 />
-              </el-form-item>
+              </el-form-item> -->
               <div class="footer-actions">
                 <!-- <el-button>重置</el-button>
                 <el-button>引用</el-button> -->
@@ -112,7 +112,7 @@
                 </div>
             </el-form>
           </el-tab-pane>
-          <el-tab-pane label="地图服务" name="service">内容3</el-tab-pane>
+          <!-- <el-tab-pane label="地图服务" name="service">内容3</el-tab-pane> -->
         </el-tabs>
           
       </el-aside>
