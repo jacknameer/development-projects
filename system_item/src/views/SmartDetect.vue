@@ -1,7 +1,7 @@
 <template>
     <el-container class="main-container">
       <!-- 左侧控制面板 -->
-      <el-aside width="380px" class="control-panel">
+      <el-aside width="350px" class="control-panel">
         <el-tabs v-model="activeTab" class="main-tabs">
           <el-tab-pane label="执行检测" name="satellite">
             <!-- 筛选表单 -->
@@ -11,14 +11,14 @@
               <el-form-item label="检索区域">
                 <!-- 第一个下拉框，功能独立 -->
                 <div class="form-row">
-        <el-select v-model="formData.adminRegion" placeholder="请选择区域" style="width: 100%;">
-            <el-option label="北京市" value="beijing" />
-            <el-option label="上海市" value="shanghai" />
+        <el-select v-model="formData.adminRegion" placeholder="请选择影像" style="width: 100%;">
+            <el-option label="影像1" value="beijing" />
+            <el-option label="影像2" value="shanghai" />
         </el-select>
                 </div>
                 <!-- 第二个下拉框，功能独立，使用新的 v-model -->
                 <div class="form-row">
-        <el-select v-model="formData.drawMethod" placeholder="请选择圈画方式" style="width: 100%;">
+        <el-select v-model="formData.drawMethod" placeholder="请选择范围" style="width: 100%;">
             <el-option label="方形" value="square" />
             <el-option label="矩形" value="rectangle" />
             <el-option label="多边形" value="polygon" />
@@ -26,9 +26,9 @@
                 </div>
 
                 <!-- 上传按钮 -->
-                <div class="form-row">
+                <!-- <div class="form-row">
         <el-button :icon="Upload" style="width: 100%">上传文件</el-button>
-                </div>
+                </div> -->
 
                 <!-- 功能选择（这也需要从 radio-group 中移出） -->
                 <div class="form-row">
@@ -50,17 +50,7 @@
                     </el-form-item>
                 </div>
               </el-form-item>
-  
-              <!-- 采集时间 -->
-              <!-- <el-form-item label="采集时间">
-                <el-date-picker
-                  v-model="formData.dateRange"
-                  type="daterange"
-                  range-separator="–"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                />
-              </el-form-item> -->
+
               <div class="footer-actions">
                 <!-- <el-button>重置</el-button>
                 <el-button>引用</el-button> -->
@@ -112,7 +102,9 @@
                 </div>
             </el-form>
           </el-tab-pane>
-          <!-- <el-tab-pane label="地图服务" name="service">内容3</el-tab-pane> -->
+          <el-tab-pane label="上传影像" name="service">
+            <FileUpload></FileUpload>
+          </el-tab-pane>
         </el-tabs>
           
       </el-aside>
@@ -151,6 +143,10 @@
   </template>
   
   <script setup>
+  // 组件的导入
+  import FileUpload from '@/components/FileUpload.vue';
+
+
   import { ref, reactive, onMounted } from 'vue';
   import { Position, Upload, Menu, FullScreen, MapLocation, Files as Layer } from '@element-plus/icons-vue';
   

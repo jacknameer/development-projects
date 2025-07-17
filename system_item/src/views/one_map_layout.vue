@@ -1,192 +1,155 @@
 <template>
   <div class="map_wrapper">
-    <!-- 下拉面板 -->
-    <div class="floating-filters">
-      <el-select v-model="filter1" placeholder="国家" clearable class="filter-item">
-        <el-option label="中国" value="a"></el-option>
-        <el-option label="美国" value="b"></el-option>
-      </el-select>
-
-      <el-select v-model="filter2" placeholder="省区" clearable class="filter-item">
-        <el-option label="湖北省" value="x"></el-option>
-        <el-option label="云南省" value="y"></el-option>
-      </el-select>
-
-      <!-- <el-select v-model="filter3" placeholder="市区" clearable class="filter-item">
-        <el-option label="武汉市" value="1"></el-option>
-        <el-option label="昆明市" value="2"></el-option>
-      </el-select> -->
-
-      <el-select v-model="filter4" placeholder="功能" clearable class="filter-item">
-        <el-option label="变化检测" :value="true"></el-option>
-        <el-option label="道路提取" :value="false"></el-option>
-      </el-select>
-      <el-select v-model="filter5" placeholder="模型" clearable class="filter-item">
-        <el-option label="模型1" :value="true"></el-option>
-        <el-option label="模型2" :value="false"></el-option>
-      </el-select>
-    </div>
-    <!-- 1. 修改：这里是新的三级折叠图层面板 -->
+    <!-- 左侧的折叠图层面板 -->
     <div class="floating-layer-panel">
       <!-- 标题 -->
-      <div class="panel-title-bar">图层列表</div>
-
+      <div class="panel-title-bar">可展示图层列表</div>
+      
       <!-- 滚动容器 -->
       <div class="layer-tree-scroll-container">
-        <!-- 根节点 -->
+  
+        <!-- 根节点 (第一级) -->
         <div v-for="level1_item in layerTreeData" :key="level1_item.value" class="level-1-item">
-          <!-- 第一级 -->
+          <!-- 第一级标题 -->
           <div class="item-header" @click="level1_item.expanded = !level1_item.expanded">
             <el-icon class="expand-icon" :class="{ 'is-expanded': level1_item.expanded }">
               <ArrowRight />
             </el-icon>
             <span>{{ level1_item.label }}</span>
           </div>
+          
           <!-- 第二级容器 -->
           <div v-if="level1_item.expanded" class="children-container level-2-container">
             <div v-for="level2_item in level1_item.children" :key="level2_item.value" class="level-2-item">
-              <!-- 第二级 -->
+              <!-- 第二级标题 -->
               <div class="item-header" @click="level2_item.expanded = !level2_item.expanded">
                 <el-icon class="expand-icon" :class="{ 'is-expanded': level2_item.expanded }">
                   <ArrowRight />
                 </el-icon>
                 <span>{{ level2_item.label }}</span>
               </div>
+              
               <!-- 第三级容器 -->
               <div v-if="level2_item.expanded" class="children-container level-3-container">
-                <div v-for="level3_item in level2_item.children" :key="level3_item.value" class="level-3-item">
-                  <!-- 第三级 (可勾选项) -->
-                  <el-checkbox v-model="level3_item.selected" :label="level3_item.label" :value="level3_item.value" />
+                <!-- 循环渲染第三级项目 -->
+                <div v-for="level3_item in level2_item.children" :key="level3_item.value" class="level-3-item-wrapper">
+                  
+                  <!-- 判断第三级是父节点还是叶子节点 -->
+                  <!-- 如果有 children，则渲染为可展开的标题 -->
+                  <div v-if="level3_item.children" class="item-header" @click="level3_item.expanded = !level3_item.expanded">
+                    <el-icon class="expand-icon" :class="{ 'is-expanded': level3_item.expanded }">
+                      <ArrowRight />
+                    </el-icon>
+                    <span>{{ level3_item.label }}</span>
+                  </div>
+                  
+                  <!-- 如果没有 children，则渲染为普通的勾选项 -->
+                  <div v-else class="level-3-item">
+                    <el-checkbox v-model="level3_item.selected" :label="level3_item.label" :value="level3_item.value" />
+                  </div>
+
+                  <!-- 第四级容器 (新增部分) -->
+                  <!-- 条件：第三级必须有 children 并且处于展开状态 -->
+                  <div v-if="level3_item.children && level3_item.expanded" class="children-container level-4-container">
+                    <div v-for="level4_item in level3_item.children" :key="level4_item.value" class="level-4-item">
+                      <!-- 第四级是最终的可勾选项 -->
+                      <el-checkbox v-model="level4_item.selected" :label="level4_item.label" :value="level4_item.value" />
+                    </div>
+                  </div>
+
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
-    <!-- (其他悬浮框无变化) -->
 
+    <!-- 右上角的功能区 (这部分保持不变) -->
+    <div class="top-right-wrapper">
+      
+      <!-- 1. 切换按钮 -->
+      <div class="top-right-size-control">
+        <el-radio-group v-model="sizeControl">
+          <el-radio-button label="符号化渲染" />
+          <el-radio-button label="数据文件上传" />
+          <el-radio-button label="数据统计" />
+        </el-radio-group>
+      </div>
 
-     <!-- 1. 右上角的悬浮框 -->
-    <div v-if="areAllFiltersSelected" class="floating-panel top-right">
-      <div class="symbol-editor-panel">
-        <el-form :model="form" label-position="right" label-width="80px" class="main-form">
-      <!-- 1. 顶部标题栏 -->
+      <!-- 2. 共享的内容面板 -->
+      <div class="floating-panel top-right">
+
+        <!-- 2.1 符号化渲染 -->
+        <div v-if="sizeControl === '符号化渲染'" class="symbol-editor-panel">
           <div class="panel-header">
-            <span class="title">符号渲染</span>
-            <div class="actions">
-          <el-button :icon="CopyDocument" text circle title="复制" />
-          <el-button :icon="Close" text circle title="关闭" />
-            </div>
+            <span class="title">符号化渲染</span>
           </div>
-
-      <!-- 2. 核心表单区域 -->
           <div class="form-content">
-            <el-form-item label="图层名称:">
-          <el-input v-model="form.layerName" disabled />
-            </el-form-item>
-            <el-form-item label="渲染类型:">
-          <el-select v-model="form.renderType" placeholder="请选择渲染类型">
-            <el-option label="单一符号" value="single" />
-            <el-option label="分类渲染" value="category" />
-            <el-option label="分级渲染" value="graded" />
-          </el-select>
-            </el-form-item>
-
-        <!-- 3. 符号预览区 -->
-            <div class="symbol-preview-section">
-          <div class="symbol-box-wrapper">
-            <div class="symbol-box-preview"></div>
+            <SymbolRender></SymbolRender>
           </div>
-          <el-button text bg>...</el-button>
-            </div>
-
-        <!-- 4. 符号优先级 -->
-            <el-checkbox v-model="form.usePriority" label="符号优先级" class="priority-checkbox" />
-
-        <!-- 5. 符号列表 -->
-            <el-table :data="tableData" border size="small" class="symbol-table">
-              <el-table-column label="符号" width="60" align="center">
-                <template #default>
-                  <div class="table-symbol-preview"></div>
-                </template>
-              </el-table-column>
-              <el-table-column prop="name" label="符号名称" />
-              <el-table-column prop="value" label="-1-" />
-              <el-table-column label="" width="40" />
-            </el-table>
-
-        <!-- 6. 标注输入框 -->
-            <el-form-item label="标注:">
-              <el-input v-model="form.annotation" type="textarea" :rows="3" placeholder="请输入标注内容" />
-            </el-form-item>
-          </div>
-
-      <!-- 7. 底部按钮栏 -->
-        <div class="panel-footer">
-          <el-button >重置</el-button>
-          <el-button type="primary">应用</el-button>
         </div>
-        </el-form>
+
+        <!-- 2.2 数据文件上传 -->
+        <div v-else-if="sizeControl === '数据文件上传'" class="data-upload-panel">
+          <div class="panel-header">
+            <span class="title">数据文件上传</span>
+          </div>
+          <div class="form-content">
+            <FileUpload></FileUpload>
+          </div>
+        </div>
+
+        <!-- 2.3 数据统计 -->
+        <div v-else-if="sizeControl === '数据统计'" class="data-stats-panel">
+          <div class="panel-header">
+            <span class="title">数据统计</span>
+          </div>
+          <div class="form-content">
+            <Data_c></Data_c>
+          </div>
+        </div>
+
       </div>
     </div>
-    <!-- 2. 新增：左下角的悬浮框 -->
-    <div v-if="areAllFiltersSelected" class="floating-panel bottom-left">
-      <h4>图例信息</h4>
-      <ul>
-        <li><span class="legend-color-1"></span> 已覆盖区域</li>
-        <li><span class="legend-color-2"></span> 未覆盖区域</li>
-      </ul>
-    </div>
-    <!-- 地图容器 -->
+    
+    <!-- 地图容器 (保持不变) -->
     <div id="map" class="map"></div>
   </div>
 </template>
 
 <script setup lang="ts">
+// 引入子组件
+import SymbolRender from '@/components/SymbolRender.vue';
+import FileUpload from '@/components/FileUpload.vue';
+import  Data_c from '@/components/Statistics.vue'; 
+
 import { ref,onMounted,computed,reactive } from 'vue'
 // 2. 新增：引入图标和 Element Plus 组件
 
 import { CopyDocument, Close,ArrowRight } from '@element-plus/icons-vue';
+import { ElRadioGroup, ElRadioButton } from 'element-plus'; // (可选) 显式引入，通常自动引入也能工作
 import { fromLonLat } from 'ol/proj';
 import Map from 'ol/Map'
 import View from 'ol/View'
 import TileLayer from 'ol/layer/Tile'
 import XYZ from 'ol/source/XYZ'
-
-// 为四个下拉框创建响应式数据
-const filter1 = ref('');
-const filter2 = ref('');
-const filter3 = ref('');
-const filter4 = ref('');
-const filter5 = ref('');
+import { RouterView } from 'vue-router';
 
 
-// 使用 reactive 创建一个集中的表单数据对象
-const form = reactive({
-  layerName: 'blockLength',
-  renderType: 'single',
-  usePriority: false,
-  annotation: '',
-});
+
+
+
+// 1. 新增：为切换按钮创建一个响应式变量，默认值为 'default'
+const sizeControl = ref('符号化渲染');
+
 
 // 表格的示例数据
 const tableData = reactive([
   { name: '默认符号', value: 'Default' },
   // 可以在这里添加更多数据行
 ]);
-
-// 3. 核心：创建一个计算属性来判断所有下拉框是否都有值
-const areAllFiltersSelected = computed(() => {
-  // .every() 方法会检查数组中的所有元素是否都满足一个条件
-  return [
-    filter1.value, 
-    filter2.value, 
-    filter3.value, 
-    filter4.value, 
-    filter5.value
-  ].every(value => value !== '' && value !== null && value !== undefined);
-});
 
 // 创建一个类似于kqgis的下拉树
 // / 3. 新增：三级折叠列表的数据结构
@@ -201,38 +164,24 @@ const layerTreeData = ref([
         value: 'admin-division',
         expanded: false, // 控制第二级展开
         children: [
-          { label: '区域1', value: 'country-border', selected: false },
-          { label: '区域2', value: 'province-border', selected: true }, // 默认勾选
-          { label: '区域3', value: 'city-border', selected: false },
-        ],
-      },
-      {
-        label: '江西省',
-        value: 'transportation',
-        expanded: false,
-        children: [
-          { label: '区域1', value: 'railway', selected: false },
-          { label: '区域2', value: 'main-road', selected: false },
-        ],
-      },
-    ],
-  },
-  {
-    label: '美国',
-    value: 'remote-sensing',
-    expanded: false,
-    children: [
-      {
-        label: '亚利桑那州',
-        value: 'gf-2',
-        expanded: false,
-        children: [
-          { label: '区域1', value: 'gf2-2023', selected: false },
-          { label: '区域2', value: 'gf2-2022', selected: false },
+          { label: '当阳市', 
+          value: 'country-border', 
+          selected: false ,
+          expanded: false, // 控制第三级展开
+          children:[
+            {
+              label: '湖北当阳市一号测量区域',
+              value: 'xx',
+              expanded: false,
+              selected: true,
+            }
+          ]
+        },
         ],
       },
     ],
   },
+  
 ]);
 
 
@@ -279,6 +228,7 @@ onMounted(()=>{
   width: 100%;
   height: 100vh;
   overflow: visible;
+  border-radius: 15px;
 }
 
 .map {
@@ -297,7 +247,7 @@ onMounted(()=>{
 }
 
 /* ======================================== */
-/* 3. 左上角：筛选器面板 */
+/* 3. 左上角：筛选器面板 (无变化) */
 /* ======================================== */
 .floating-filters {
   position: absolute;
@@ -315,10 +265,10 @@ onMounted(()=>{
 }
 
 .filter-item {
-  width: 170px; /* 调整宽度以适应5个选择器 */
+  width: 170px;
 }
 
-/* 增强提示文字可见性 */
+/* 增强提示文字可见性 (无变化) */
 :deep(.floating-filters .el-select.filter-item .el-input__wrapper) {
   background-color: rgba(60, 80, 110, 0.8) !important;
   box-shadow: none !important;
@@ -358,39 +308,39 @@ onMounted(()=>{
 
 
 /* ======================================================== */
-/* 4. 新增/替换：三级折叠图层列表面板样式                  */
+/* 4. 左侧三级折叠图层列表面板样式 (无变化)              */
 /* ======================================================== */
 .floating-layer-panel {
   position: absolute;
-  top: 70px; /* 紧邻上方筛选器 */
+  top: 20px;
   left: 15px;
   z-index: 10;
-  width: 280px; /* 您可以根据需要调整面板宽度 */
-  height: calc(100vh - 85px - 70px); /* 动态计算高度，留出上下边距 */
-  max-height: 900px; /* 设置一个最大高度 */
+  width: 280px;
+  height: calc(100vh - 85px - 70px);
+  max-height: 900px;
   background-color: rgba(30, 41, 59, 0.88);
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: #e0e0e0;
   display: flex;
-  flex-direction: column; /* 垂直布局：标题 + 列表 */
+  flex-direction: column;
 }
-
+/* rgba(255, 255, 255, 0.2) */
 .panel-title-bar {
   padding: 12px 15px;
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0; /* 防止标题栏在空间不足时被压缩 */
+  border-bottom: 1px solid white;
+  flex-shrink: 0;
 }
 
 .layer-tree-scroll-container {
   padding: 10px;
-  overflow-y: auto; /* 当内容超出时显示滚动条 */
-  flex-grow: 1; /* 占据所有剩余的垂直空间 */
+  overflow-y: auto;
+  flex-grow: 1;
+  
 }
 
-/* 美化滚动条 (仅对 Webkit 内核浏览器生效) */
 .layer-tree-scroll-container::-webkit-scrollbar {
   width: 6px;
 }
@@ -402,7 +352,6 @@ onMounted(()=>{
   background: transparent;
 }
 
-/* 每一级可点击的标题行 */
 .item-header {
   display: flex;
   align-items: center;
@@ -410,39 +359,33 @@ onMounted(()=>{
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.2s ease;
-  user-select: none; /* 防止点击时选中文本 */
+  user-select: none;
 }
 
 .item-header:hover {
   background-color: rgba(71, 85, 105, 0.7);
 }
 
-/* 展开/折叠的箭头图标 */
 .expand-icon {
   margin-right: 8px;
   transition: transform 0.2s ease;
 }
 
-/* 箭头旋转效果 */
 .expand-icon.is-expanded {
   transform: rotate(90deg);
 }
 
-/* 子项的容器，用于实现缩进 */
 .children-container {
   padding-left: 20px;
 }
 
-/* 第三级可勾选项 */
 .level-3-item {
   display: flex;
   align-items: center;
-  padding: 4px 0 4px 24px; /* 额外缩进，与父级的文字对齐 */
+  padding: 4px 0 4px 24px;
 }
 
-/* 深度作用选择器，修改 Element Plus Checkbox 在深色背景下的样式 */
 :deep(.el-checkbox) {
-  /* 修改标签文字颜色 */
   .el-checkbox__label {
     color: #cfd8dc !important;
     font-size: 14px;
@@ -451,26 +394,18 @@ onMounted(()=>{
   .el-checkbox__label:hover {
     color: #ffffff !important;
   }
-  
-  /* 修改勾选框的边框 */
   .el-checkbox__inner {
     background-color: transparent;
     border-color: #909399;
     transition: border-color 0.2s, background-color 0.2s;
   }
-  
-  /* 鼠标悬浮时边框颜色 */
   .el-checkbox__input:not(.is-checked):hover .el-checkbox__inner {
       border-color: #409EFF;
   }
-  
-  /* 选中状态的样式 */
   .el-checkbox__input.is-checked .el-checkbox__inner {
     background-color: #409EFF;
     border-color: #409EFF;
   }
-
-  /* 选中状态的文字颜色 */
   .el-checkbox__input.is-checked + .el-checkbox__label {
     color: #409EFF !important;
   }
@@ -478,26 +413,67 @@ onMounted(()=>{
 
 
 /* ======================================== */
-/* 5. 右上角：符号化设置面板 (及之后的内容保持不变) */
+/* 5. 【关键修改区域】右上角布局与面板样式     */
 /* ======================================== */
-.top-right {
+
+/* 新增：右上角总包装容器，负责定位 */
+.top-right-wrapper {
+  position: absolute;
   top: 15px;
   right: 15px;
-  width: 380px;
-  max-height: calc(100vh - 30px);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* 在按钮组和内容面板之间增加一点小间距 */
+  width: 380px; /* 给整个容器一个固定的宽度 */
+  
+  
+}
+
+
+
+/* 修改：内容面板容器也不再需要独立定位和固定宽度 */
+.top-right {
+  position: relative; /* 改为相对定位，因为它现在在 flex 流中 */
+  width: 100%; /* 撑满父容器的宽度 */
+  max-height: calc(100vh - 75px); /* (60px_approximated_top + 15px_bottom_margin) */
   background-color: #ffffff;
   border: 1px solid #dcdfe6;
   color: #606266;
   display: flex;
   flex-direction: column;
+  border-radius: 6px;
+  /* box-shadow 和 border-radius 已在 .floating-panel 中定义 */
 }
 
-.symbol-editor-panel {
+/* 新增：让按钮组撑满宽度并均分 */
+:deep(.top-right-size-control .el-radio-group) {
+  width: 100%;
+  display: flex;
+  border-radius: 6px; /* 【新增】设置圆角大小，可以根据喜好调整 */
+  overflow: hidden;    /* 【关键】防止内部按钮的直角溢出，破坏圆角效果 */
+}
+
+:deep(.top-right-size-control .el-radio-button) {
+  flex: 1; /* 让每个按钮平分宽度 */
+}
+
+:deep(.top-right-size-control .el-radio-button .el-radio-button__inner) {
+  width: 100%;
+  text-align: center;
+}
+
+/* 新增/修改：统一所有面板内容的布局，确保它们能填满容器 */
+.symbol-editor-panel,
+.data-upload-panel,
+.data-stats-panel {
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 }
 
+/* (以下为符号渲染面板内部样式，保持不变) */
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -505,18 +481,23 @@ onMounted(()=>{
   padding: 8px 12px;
   border-bottom: 1px solid #e4e7ed;
   flex-shrink: 0;
+  background-color: rgba(30, 41, 59, 0.88);
 }
 
 .title,
 .panel-title {
   font-weight: 600;
-  color: #303133;
+  color: #f2f3f5;
 }
 
 .form-content {
   padding: 15px;
   overflow-y: auto;
   flex-grow: 1;
+  height: 75vh;
+  border-radius: 6px;
+  background-color: rgba(30, 41, 59, 0.88);
+  
 }
 
 .el-form-item {
@@ -534,78 +515,29 @@ onMounted(()=>{
   margin-bottom: 15px;
 }
 
-.symbol-box-wrapper {
-  padding: 4px;
-  border: 1px solid #dcdfe6;
-  background-color: white;
-  margin-right: 10px;
-}
 
-.symbol-box-preview {
-  width: 90px;
-  height: 50px;
-  background-color: #d9ecff;
-  border: 1px solid #79bbff;
-}
+
 
 .priority-checkbox {
   margin-bottom: 15px;
 }
 
-.symbol-table {
-  width: 100%;
-  margin-bottom: 15px;
-}
 
-.table-symbol-preview {
-  width: 20px;
-  height: 20px;
-  background-color: #d9ecff;
-  border: 1px solid #79bbff;
-  margin: 0 auto;
-}
 
-.panel-footer {
+
+
+/* .panel-footer {
   text-align: right;
   padding: 10px 15px;
   border-top: 1px solid #e4e7ed;
   background-color: #f5f7fa;
   flex-shrink: 0;
-}
+  border-radius: 6px;
+} */
 
 /* ======================================== */
-/* 6. 左下角：图例面板 */
+/* 6. 左下角：图例面板 (无变化)               */
 /* ======================================== */
-.bottom-left {
-  bottom: 15px;
-  left: 15px;
-  width: 220px;
-  padding: 15px;
-  background-color: rgba(30, 41, 59, 0.88);
-  color: #e2e8f0;
-  backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.bottom-left h4 {
-  margin: 0 0 10px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  width: 100%;
-}
-
-.bottom-left ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.bottom-left li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
 .legend-color-1,
 .legend-color-2 {
   width: 16px;
@@ -615,5 +547,4 @@ onMounted(()=>{
 }
 .legend-color-1 { background-color: #409eff; }
 .legend-color-2 { background-color: #f56c6c; }
-
 </style>
